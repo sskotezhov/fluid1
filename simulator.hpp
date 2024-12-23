@@ -111,10 +111,10 @@ class SimulationSession final {
         Storage v{};
         void clear()
         {
-            for (auto i : v)
-                for (auto j : i)
-                    for (auto k : j)
-                        k = {};
+            for (auto &i : v)
+                for (auto &j : i)
+                    for (auto &k : j)
+                        k = ElementType(0);
         }
         VectorField()
             requires(kUseStaticSize)
@@ -195,7 +195,13 @@ public:
             }
 
             // Apply forces from p
-            p_old = p;
+            for (int k = 0; k < rows; k++)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    p_old[k][j] = p[k][j];
+                }
+            }
             for (size_t x = 0; x < rows; ++x) {
                 for (size_t y = 0; y < columns; ++y) {
                     if (field[x][y] == '#')

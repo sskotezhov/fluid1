@@ -33,9 +33,9 @@ int main(int argc, char **argv) {
         }
     }*/
     const Simulator simulator = Simulator::from_params(types::SimulationParams{
-        .p_type_name      = "FLOAT",//args["--p-type"],
-        .v_type_name      = "FLOAT",//args["--v-type"],
-        .v_flow_type_name = "FLOAT",//args["--v-flow-type"],
+        .p_type_name      = "FIXED(32, 16)",//args["--p-type"],
+        .v_type_name      = "FIXED(32, 16)",//args["--v-type"],
+        .v_flow_type_name = "FIXED(32, 16)",//args["--v-flow-type"],
     });
     std::string fl[36] = {
     "####################################################################################",
