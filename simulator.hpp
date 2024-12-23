@@ -109,7 +109,13 @@ class SimulationSession final {
         using value_type = Storage::value_type;
 
         Storage v{};
-
+        void clear()
+        {
+            for (auto i : v)
+                for (auto j : i)
+                    for (auto k : j)
+                        k = {};
+        }
         VectorField()
             requires(kUseStaticSize)
         = default;
@@ -164,8 +170,7 @@ public:
         int dirs[rows][columns]{};
         rho[' '] = 0.01;
         rho['.'] = 1000;
-        VelocityElementType g = 0.1;
-    
+        VelocityElementType g(0.1);
         for (size_t x = 0; x < rows; ++x) {
             for (size_t y = 0; y < columns; ++y) {
                 if (field[x][y] == '#')
@@ -176,9 +181,9 @@ public:
             }
         }
 
-        for (size_t i = 0; i < 100000; ++i) {
+        for (size_t i = 0; i < 1000000; ++i) {
             
-            PElementType total_delta_p = 0;
+            PElementType total_delta_p(0);
             // Apply external forces
             for (size_t x = 0; x < rows; ++x) {
                 for (size_t y = 0; y < columns; ++y) {
@@ -207,8 +212,7 @@ public:
                             }
                             force -= contr * rho[(int) field[nx][ny]];
                             contr = 0;
-                            VelocityElementType tmp = VelocityElementType(force / rho[(int) field[x][y]]);
-                            velocity.add(x, y, dx, dy, tmp);
+                            velocity.add(x, y, dx, dy, VelocityElementType(force / rho[(int) field[x][y]]));
                             p[x][y] -= force / dirs[x][y];
                             total_delta_p -= force / dirs[x][y];
                         }
@@ -217,7 +221,7 @@ public:
             }
 
             // Make flow from velocities
-
+            velocity_flow.clear();
             bool prop = false;
             do {
                 UT += 2;
@@ -242,7 +246,7 @@ public:
                     for (auto [dx, dy] : deltas) {
                         auto old_v = velocity.get(x, y, dx, dy);
                         auto new_v = velocity_flow.get(x, y, dx, dy);
-                        if (old_v > VelocityElementType(0)) {
+                        if (old_v > 0) {
                             assert(new_v <= old_v);
                             velocity.get(x, y, dx, dy) = (VelocityElementType)new_v;
                             auto force = (old_v - new_v) * rho[(int) field[x][y]];
@@ -278,7 +282,9 @@ public:
             if (prop) {
                 cout << "Tick " << i << ":\n";
                 for (size_t x = 0; x < rows; ++x) {
-                    cout << field[x].data() << "\n";
+                    for (size_t y = 0; y < columns; y++)
+                        cout << field[x][y];
+                    cout << endl;
                 }
             }
         }

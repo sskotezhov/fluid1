@@ -1,5 +1,5 @@
 #include "simulator.hpp"
-#define TYPES FIXED(32, 5),DOUBLE,FLOAT
+#define TYPES FIXED(32, 16),DOUBLE,FLOAT
 #define SIZES S(36, 85)
 #ifndef TYPES
 #error "TYPES is not defined"
@@ -34,8 +34,8 @@ int main(int argc, char **argv) {
     }*/
     const Simulator simulator = Simulator::from_params(types::SimulationParams{
         .p_type_name      = "FLOAT",//args["--p-type"],
-        .v_type_name      = "FIXED(32,  5)",//args["--v-type"],
-        .v_flow_type_name = "DOUBLE",//args["--v-flow-type"],
+        .v_type_name      = "FLOAT",//args["--v-type"],
+        .v_flow_type_name = "FLOAT",//args["--v-flow-type"],
     });
     std::string fl[36] = {
     "####################################################################################",
