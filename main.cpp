@@ -1,6 +1,4 @@
 #include "simulator.hpp"
-#define TYPES FIXED(32, 16),DOUBLE,FLOAT
-#define SIZES S(36, 85)
 #ifndef TYPES
 #error "TYPES is not defined"
 #endif
