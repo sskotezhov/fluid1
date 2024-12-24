@@ -29,7 +29,41 @@ using namespace std;
     }
 
 namespace types {
-
+struct data_from_file
+{
+    data_from_file(size_t N, size_t M, std::ifstream& in)
+    {
+        p.resize(N);
+        velocity.resize(N);
+        last_use.resize(N);
+        for (int i = 0; i < N; i++)
+        {
+            p[i].resize(M);
+            velocity[i].resize(M);
+            last_use[i].resize(M);
+        }
+        in >> g;
+        for (auto &elem : rho)
+            in >> elem;
+        for (auto &i : p)
+            for (auto &j : i)
+                in >> j;
+        for (auto &i : velocity)
+            for (auto &j : i)
+                for (auto &k : j)
+                    {in >> k;}
+        for (auto &i : last_use)
+            for (auto &j : i)
+                {in >> j;}
+        in >> UT;
+    }
+    double g;
+    double rho[256];
+    std::vector<std::vector<double>> p;
+    std::vector<std::vector<std::array<double, 4>>> velocity;
+    std::vector<std::vector<int>> last_use;
+    int UT;  
+};
 struct SizePair {
     std::size_t rows{};
     std::size_t columns{};
@@ -181,7 +215,7 @@ public:
             }
         }
 
-        for (size_t i = 0; i < 1000000; ++i) {
+        for (size_t i = tick; i < 1000000; ++i) {
             
             PElementType total_delta_p(0);
             // Apply external forces
@@ -286,12 +320,45 @@ public:
             }
 
             if (prop) {
+                std::ofstream out("./local_save/save_"+std::to_string(rnd()));
                 cout << "Tick " << i << ":\n";
                 for (size_t x = 0; x < rows; ++x) {
                     for (size_t y = 0; y < columns; y++)
+                    {
                         cout << field[x][y];
+                        out << field[x][y];
+                    }
+                    out << endl;
                     cout << endl;
                 }
+                out << g << std::endl;
+                for (int j = 0; j < 256; j++)
+                {
+                    out << rho[j] << " ";
+                }
+                for (size_t x = 0; x < rows; ++x) {
+                    for (size_t y = 0; y < columns; y++)
+                    {
+                        out << p[x][y] << " ";
+                    }
+                    out << endl;
+                }
+                for (size_t x = 0; x < rows; ++x) {
+                    for (size_t y = 0; y < columns; y++)
+                    {
+                        out << velocity.v[x][y][0] << " " << velocity.v[x][y][1] << " " << velocity.v[x][y][2] << " " << velocity.v[x][y][3] << " ";
+                    }
+                    out << endl;
+                }
+                for (size_t x = 0; x < rows; ++x) {
+                    for (size_t y = 0; y < columns; y++)
+                    {
+                        out << last_use[x][y] << " ";
+                    }
+                    out << endl;
+                }
+                out << UT;
+                out.close();
             }
         }
         assert(field.size() == rows);
@@ -472,15 +539,15 @@ private:
           velocity{rows, typename VelocityStorage::value_type(columns)},
           velocity_flow{rows, typename VelocityFlowStorage::value_type(columns)},
           last_use{rows, typename LastUseStorage::value_type(columns)} {}
-
-    Field field{};
-    std::array<RhoElementType, 256> rho{};
-    PStorage p{};
+    Field field{}; //save
+    std::array<RhoElementType, 256> rho{}; //save
+    PStorage p{}; //save
     PStorage p_old{};
-    VelocityStorage velocity{};
+    VelocityStorage velocity{}; //save
     VelocityFlowStorage velocity_flow{};
-    LastUseStorage last_use{};
-    int UT = 0;
+    LastUseStorage last_use{}; //save
+    int UT = 0; //save
+    size_t tick = 0; //save
     mt19937 rnd{1337};
 };
 

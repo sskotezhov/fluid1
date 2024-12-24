@@ -137,8 +137,8 @@ Fixed<N, M> &operator/=(Fixed<N, M> &a, Fixed<N, M> b) {
     return a = a / b;
 }
 template<size_t N, size_t M>
-ostream &operator<<(ostream &out, Fixed<N, M> x) {
-    return out << x.v / (double) (1 << 16);
+std::ostream &operator<<(std::ostream &out, Fixed<N, M> x) {
+    return out << x.v / (double) (1 << M);
 }
 template<size_t N, size_t M>
 Fixed<N, M> abs(Fixed<N, M> x) {
