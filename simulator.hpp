@@ -45,6 +45,7 @@ struct data_from_file
         in >> g;
         for (auto &elem : rho)
             in >> elem;
+        in >> tick;
         for (auto &i : p)
             for (auto &j : i)
                 in >> j;
@@ -59,6 +60,7 @@ struct data_from_file
     }
     double g;
     double rho[256];
+    size_t tick = 0;
     std::vector<std::vector<double>> p;
     std::vector<std::vector<std::array<double, 4>>> velocity;
     std::vector<std::vector<int>> last_use;
@@ -71,6 +73,7 @@ struct SizePair {
 
 struct Context {
     std::vector<std::vector<char>> field;
+    data_from_file data;
 };
 
 template <class... Types>
@@ -179,7 +182,7 @@ class SimulationSession final {
 
 public:
     explicit constexpr SimulationSession(const Context& ctx) noexcept
-        requires(kUseStaticSize)
+        requires(kUseStaticSize): saved(ctx.data)
     {
         assert(ctx.field.size() == Rows);
         assert(ctx.field.front().size() == Columns);
@@ -193,7 +196,7 @@ public:
 
     explicit constexpr SimulationSession(const Context& ctx)
         requires(!kUseStaticSize)
-        : SimulationSession(ctx.field, ctx.field.size(), ctx.field.front().size()) {}
+        : SimulationSession(ctx.field, ctx.field.size(), ctx.field.front().size(), ctx.data) {}
 
     void start() {
         std::size_t rows    = field.size();
@@ -202,9 +205,41 @@ public:
         assert(columns > 0);
         std::cout << "Starting simulation with field size: (" << rows << ", " << columns <<")\n";
         int dirs[rows][columns]{};
-        rho[' '] = 0.01;
-        rho['.'] = 1000;
-        VelocityElementType g(0.1);
+        for (int i = 0; i < 256; i++)
+        {
+            rho[i] = (saved.rho[i]);
+        }
+        VelocityElementType g(saved.g);
+        tick = saved.tick;
+        if (tick != 0)
+        {
+            std::cout << "CHECK";
+            UT = saved.UT;
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    p[i][j] = (saved.p[i][j]);
+                }
+            }
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    last_use[i][j] = (saved.last_use[i][j]);
+                }
+            }
+            for (int i = 0; i < rows; i++)
+            {
+                for (int j = 0; j < columns; j++)
+                {
+                    velocity.v[i][j][0] = (saved.velocity[i][j][0]);
+                    velocity.v[i][j][1] = (saved.velocity[i][j][1]);
+                    velocity.v[i][j][2] = (saved.velocity[i][j][2]);
+                    velocity.v[i][j][3] = (saved.velocity[i][j][3]);
+                }
+            }
+        }
         for (size_t x = 0; x < rows; ++x) {
             for (size_t y = 0; y < columns; ++y) {
                 if (field[x][y] == '#')
@@ -214,9 +249,7 @@ public:
                 }
             }
         }
-
         for (size_t i = tick; i < 1000000; ++i) {
-            
             PElementType total_delta_p(0);
             // Apply external forces
             for (size_t x = 0; x < rows; ++x) {
@@ -336,6 +369,8 @@ public:
                 {
                     out << rho[j] << " ";
                 }
+                out << endl;
+                out << i << endl;
                 for (size_t x = 0; x < rows; ++x) {
                     for (size_t y = 0; y < columns; y++)
                     {
@@ -531,14 +566,16 @@ public:
 
 
 private:
-    explicit constexpr SimulationSession(const Field& field, std::size_t rows, std::size_t columns)
+    explicit constexpr SimulationSession(const Field& field, std::size_t rows, std::size_t columns, const data_from_file &ctx_data)
         requires(!kUseStaticSize)
         : field{field},
           p{rows, typename PStorage::value_type(columns)},
           p_old{rows, typename PStorage::value_type(columns)},
           velocity{rows, typename VelocityStorage::value_type(columns)},
           velocity_flow{rows, typename VelocityFlowStorage::value_type(columns)},
-          last_use{rows, typename LastUseStorage::value_type(columns)} {}
+          last_use{rows, typename LastUseStorage::value_type(columns)},
+          saved(ctx_data){}
+    data_from_file saved;
     Field field{}; //save
     std::array<RhoElementType, 256> rho{}; //save
     PStorage p{}; //save
