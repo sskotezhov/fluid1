@@ -1,5 +1,4 @@
 #include "simulator.hpp"
-#define TYPES FAST_FIXED(32, 16), FIXED(32,16), FIXED(32,8), DOUBLE
 #ifndef TYPES
 #error "TYPES is not defined"
 #endif
