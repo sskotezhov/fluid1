@@ -64,6 +64,22 @@ struct Fixed {
     explicit operator float() const {return v / (float) ((int64_t)(1) << K);}
     explicit operator int() const {return (int64_t)v >> K;}
 };
+
+
+
+template<size_t N, size_t M>
+Fixed<N, M> operator+(Fixed<N, M> const &a, Fixed<N, M> const &b) {
+    return Fixed<N, M>::from_raw(a.v+b.v);
+}
+template<size_t N, size_t M, typename type_b>
+Fixed<N, M> operator+(Fixed<N, M> a, type_b b) {
+    return a+Fixed<N,M>(b);
+}
+template<size_t N, size_t M, typename type_b>
+type_b operator+(type_b b, Fixed<N, M> a) {
+    return type_b(Fixed<N,M>(b)+a);
+}
+
 template<size_t N, size_t M>
 Fixed<N, M> operator-(Fixed<N, M> const &a, Fixed<N, M> const &b) {
     return Fixed<N, M>::from_raw(a.v-b.v);
@@ -76,14 +92,10 @@ template<size_t N, size_t M, typename type_b>
 type_b operator-(type_b b, Fixed<N, M> a) {
     return type_b(Fixed<N,M>(b)-a);
 }
-template<size_t N, size_t M, typename type_b>
-Fixed<N, M> operator/(Fixed<N, M> a, type_b b) {
-    return a/Fixed<N,M>(b);
-}
-template<size_t N, size_t M>
-Fixed<N, M> operator+(Fixed<N, M> const &a, Fixed<N, M> const &b) {
-    return Fixed<N, M>::from_raw(a.v+b.v);
-}
+
+
+
+
 template<size_t N, size_t M>
 Fixed<N, M> operator*(Fixed<N, M> const &a, Fixed<N, M> const &b) {
     return Fixed<N, M>::from_raw(((int64_t)a.v*b.v) >> M);
@@ -96,10 +108,22 @@ template<size_t N, size_t M, typename type_b>
 type_b operator*(type_b b, Fixed<N, M> a) {
     return type_b(a*Fixed<N,M>(b));
 }
+
+
+
 template<size_t N, size_t M>
 Fixed<N, M> operator/(Fixed<N, M> a, Fixed<N, M> b) {
     return Fixed<N, M>::from_raw(((int64_t)a.v<<M)/b.v);
 }
+template<size_t N, size_t M, typename type_b>
+Fixed<N, M> operator/(Fixed<N, M> a, type_b b) {
+    return a/Fixed<N,M>(b);
+}
+template<size_t N, size_t M, typename type_b>
+type_b operator/(type_b b, Fixed<N, M> a) {
+    return type_b(Fixed<N,M>(b)/a);
+}
+
 template<size_t N, size_t M>
 Fixed<N, M> &operator+=(Fixed<N, M> &a, Fixed<N, M> b) {
     return a = a + b;
@@ -112,6 +136,8 @@ template<size_t N, size_t M, typename type_b>
 Fixed<N, M> &operator+=(Fixed<N, M> &a, type_b b) {
     return a = a + Fixed<N, M>(b);
 }
+
+
 template<size_t N, size_t M>
 Fixed<N, M> &operator-=(Fixed<N, M> &a, Fixed<N, M> b) {
     return a = a - b;
@@ -124,6 +150,8 @@ template<size_t N, size_t M, typename type_b>
 type_b &operator-=(type_b &b, Fixed<N, M> a) {
     return b = b - type_b(a);
 }
+
+
 template<size_t N, size_t M, typename type_b>
 Fixed<N, M> operator*=(Fixed<N, M> &a, type_b b) {
     return a = a * Fixed<N, M>(b);
@@ -132,10 +160,26 @@ template<size_t N, size_t M>
 Fixed<N, M> &operator*=(Fixed<N, M> &a, Fixed<N, M> b) {
     return a = a * b;
 }
+template<size_t N, size_t M, typename type_b>
+type_b &operator*=(type_b &b, Fixed<N, M> a) {
+    return b = b * type_b(a);
+}
+
+
 template<size_t N, size_t M>
 Fixed<N, M> &operator/=(Fixed<N, M> &a, Fixed<N, M> b) {
     return a = a / b;
 }
+template<size_t N, size_t M, typename type_b>
+Fixed<N, M> &operator/=(Fixed<N, M> &a, type_b b) {
+    return a = a / Fixed<N, M>(b);
+}
+template<size_t N, size_t M, typename type_b>
+type_b &operator/=(type_b &b, Fixed<N, M> a) {
+    return b = b / type_b(a);
+}
+
+
 template<size_t N, size_t M>
 std::ostream &operator<<(std::ostream &out, Fixed<N, M> x) {
     return out << x.v / (double) (1 << M);

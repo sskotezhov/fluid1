@@ -213,7 +213,6 @@ public:
         tick = saved.tick;
         if (tick != 0)
         {
-            std::cout << "CHECK";
             UT = saved.UT;
             for (int i = 0; i < rows; i++)
             {
