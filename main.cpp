@@ -1,4 +1,5 @@
 #include "simulator.hpp"
+#define TYPES FAST_FIXED(32, 16), FIXED(32,16), FIXED(32,8), DOUBLE
 #ifndef TYPES
 #error "TYPES is not defined"
 #endif
@@ -11,7 +12,7 @@ using Simulator = types::Simulator<types::TypesList<TYPES>, SIZES>;
 using Simulator = types::Simulator<types::TypesList<TYPES>>;
 
 #endif
-//./main --p-type="FIXED(32,16)" --v-type="FIXED(32,16)" --v-flow-type="FIXED(32,16)" blep.txt
+//./main --p-type="FIXED(32,16)" --v-type="FIXED(32,16)" --v-flow-type="FIXED(32,16)" 1.txt
 int main(int argc, char **argv) {
     if (argc < 5)
     {

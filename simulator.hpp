@@ -203,7 +203,6 @@ public:
         std::size_t columns = field.front().size();
         assert(rows > 0);
         assert(columns > 0);
-        std::cout << "Starting simulation with field size: (" << rows << ", " << columns <<")\n";
         int dirs[rows][columns]{};
         for (int i = 0; i < 256; i++)
         {
@@ -416,7 +415,7 @@ public:
         assert(velocity_flow.v.back().size() == columns);
         assert(last_use.back().size() == columns);
     }
-    tuple<PElementType, bool, std::pair<int, int>> propagate_flow(int x, int y, PElementType lim) { //CHECK
+    tuple<PElementType, bool, std::pair<int, int>> propagate_flow(int x, int y, PElementType lim) {
         last_use[x][y] = UT - 1;
         PElementType ret = 0;
         for (auto [dx, dy] : deltas) {

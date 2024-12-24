@@ -34,13 +34,36 @@ struct Fixed {
     static constexpr std::size_t kNValue = N;
     static constexpr std::size_t kKValue = K;
     static constexpr bool kFast          = Fast;
-
+    Fixed operator+(Fixed const &b) {
+        return Fixed::from_raw(v+b.v);
+    }
+    Fixed operator-(Fixed const &b) {
+        return Fixed::from_raw(v-b.v);
+    }
+    Fixed operator*(Fixed const &b) {
+        return Fixed::from_raw(((int64_t)v*b.v) >> K);
+    }
+    Fixed operator/(Fixed const &b) {
+        return Fixed::from_raw(((int64_t)v << K)/b.v);
+    }
+    Fixed& operator+=(Fixed const &b) {
+        return (*this) = (*this) + b;
+    }
+    Fixed& operator-=(Fixed const &b) {
+        return (*this) = (*this) - b;
+    }
+    Fixed& operator*=(Fixed const &b) {
+        return (*this) = (*this) * b;
+    }
+    Fixed& operator/=(Fixed const &b) {
+        return (*this) = (*this) / b;
+    }
     constexpr Fixed(int v) : v(static_cast<int64_t>(v) << K) {}
     constexpr Fixed(float f) : v(static_cast<int64_t>(f * (type(1) << K))) {}
     constexpr Fixed(double f) : v(static_cast<int64_t>(f * (type(1) << K))) {}
     constexpr Fixed() : v(0) {}
-    template <int _n, int _m>
-    constexpr Fixed(Fixed<_n, _m> a)
+    template <size_t _n, size_t _m, bool FAST>
+    explicit constexpr Fixed(Fixed<_n, _m, FAST> a)
     {
         v = a.v;
         if (K > _m)
@@ -64,128 +87,199 @@ struct Fixed {
     explicit operator float() const {return v / (float) ((int64_t)(1) << K);}
     explicit operator int() const {return (int64_t)v >> K;}
 };
-
-
-
+template<size_t N, size_t M, size_t _N, size_t _M, bool FAST>
+auto operator<=>(const Fixed<N, M, FAST>& a, const Fixed<_N,_M, FAST>& b)
+{
+    return a<=>Fixed<N,M, FAST>(b);
+}
+template<size_t N, size_t M, size_t _N, size_t _M, bool FAST>
+bool operator==(const Fixed<N, M, FAST>& a, const Fixed<_N,_M, FAST>& b)
+{
+    return a==Fixed<N,M, FAST>(b);
+}
 template<size_t N, size_t M>
-Fixed<N, M> operator+(Fixed<N, M> const &a, Fixed<N, M> const &b) {
-    return Fixed<N, M>::from_raw(a.v+b.v);
+auto operator<=>(const Fixed<N, M>& a, const Fixed<N,M,true>& b)
+{
+    return a<=>Fixed<N,M>(b);
 }
-template<size_t N, size_t M, typename type_b>
-Fixed<N, M> operator+(Fixed<N, M> a, type_b b) {
-    return a+Fixed<N,M>(b);
-}
-template<size_t N, size_t M, typename type_b>
-type_b operator+(type_b b, Fixed<N, M> a) {
-    return type_b(Fixed<N,M>(b)+a);
-}
-
 template<size_t N, size_t M>
-Fixed<N, M> operator-(Fixed<N, M> const &a, Fixed<N, M> const &b) {
-    return Fixed<N, M>::from_raw(a.v-b.v);
+bool operator==(const Fixed<N, M>& a, const Fixed<N,M,true>& b)
+{
+    return a==Fixed<N,M>(b);
 }
-template<size_t N, size_t M, typename type_b>
-Fixed<N, M> operator-(Fixed<N, M> a, type_b b) {
-    return a-Fixed<N,M>(b);
-}
-template<size_t N, size_t M, typename type_b>
-type_b operator-(type_b b, Fixed<N, M> a) {
-    return type_b(Fixed<N,M>(b)-a);
-}
-
-
-
-
 template<size_t N, size_t M>
-Fixed<N, M> operator*(Fixed<N, M> const &a, Fixed<N, M> const &b) {
-    return Fixed<N, M>::from_raw(((int64_t)a.v*b.v) >> M);
+auto operator<=>(const Fixed<N, M, true>& a, const Fixed<N,M>& b)
+{
+    return a<=>Fixed<N,M,true>(b);
 }
-template<size_t N, size_t M, typename type_b>
-Fixed<N, M> operator*(Fixed<N, M> a, type_b b) {
-    return a*Fixed<N,M>(b);
-}
-template<size_t N, size_t M, typename type_b>
-type_b operator*(type_b b, Fixed<N, M> a) {
-    return type_b(a*Fixed<N,M>(b));
-}
-
-
-
 template<size_t N, size_t M>
-Fixed<N, M> operator/(Fixed<N, M> a, Fixed<N, M> b) {
-    return Fixed<N, M>::from_raw(((int64_t)a.v<<M)/b.v);
+bool operator==(const Fixed<N, M, true>& a, const Fixed<N,M>& b)
+{
+    return a==Fixed<N,M,true>(b);
 }
-template<size_t N, size_t M, typename type_b>
-Fixed<N, M> operator/(Fixed<N, M> a, type_b b) {
-    return a/Fixed<N,M>(b);
+template<size_t N, size_t M, size_t _N, size_t _M>
+auto operator<=>(const Fixed<N, M>& a, const Fixed<_N,_M,true>& b)
+{
+    return a<=>Fixed<N,M>(b);
 }
-template<size_t N, size_t M, typename type_b>
-type_b operator/(type_b b, Fixed<N, M> a) {
-    return type_b(Fixed<N,M>(b)/a);
+template<size_t N, size_t M, size_t _N, size_t _M>
+bool operator==(const Fixed<N, M>& a, const Fixed<_N,_M,true>& b)
+{
+    return a==Fixed<N,M>(b);
+}
+template<size_t N, size_t M, size_t _N, size_t _M>
+auto operator<=>(const Fixed<N, M, true>& a, const Fixed<_N,_M>& b)
+{
+    return a<=>Fixed<N,M,true>(b);
+}
+template<size_t N, size_t M, size_t _N, size_t _M>
+bool operator==(const Fixed<N, M, true>& a, const Fixed<_N,_M>& b)
+{
+    return a==Fixed<N,M,true>(b);
+}
+template<size_t N, size_t M, size_t _N, size_t _M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> operator+(Fixed<N, M, FAST1> a, Fixed<_N, _M, FAST2> b) {
+    return a+Fixed<N,M, FAST1>(b);
+}
+template<size_t N, size_t M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> operator+(Fixed<N, M, FAST1> a, Fixed<N, M, FAST2> b) {
+    return a+Fixed<N,M, FAST1>(b);
+}
+template<size_t N, size_t M, bool FAST, typename type_b>
+Fixed<N, M, FAST> operator+(Fixed<N, M, FAST> a, type_b b) {
+    return a+Fixed<N,M, FAST>(b);
+}
+template<size_t N, size_t M, bool FAST, typename type_b>
+type_b operator+(type_b b, Fixed<N, M, FAST> a) {
+    return type_b(Fixed<N,M, FAST>(b)+a);
 }
 
-template<size_t N, size_t M>
-Fixed<N, M> &operator+=(Fixed<N, M> &a, Fixed<N, M> b) {
-    return a = a + b;
+template<size_t N, size_t M, size_t _N, size_t _M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> operator-(Fixed<N, M, FAST1> a, Fixed<_N, _M, FAST2> b) {
+    return a-Fixed<N,M, FAST1>(b);
 }
-template<size_t N, size_t M, typename type_b>
-type_b &operator+=(type_b &b, Fixed<N, M> a) {
+template<size_t N, size_t M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> operator-(Fixed<N, M, FAST1> a, Fixed<N, M, FAST2> b) {
+    return a-Fixed<N,M, FAST1>(b);
+}
+template<size_t N, size_t M, bool FAST, typename type_b>
+Fixed<N, M, FAST> operator-(Fixed<N, M, FAST> a, type_b b) {
+    return a-Fixed<N,M, FAST>(b);
+}
+template<size_t N, size_t M, bool FAST, typename type_b>
+type_b operator-(type_b b, Fixed<N, M, FAST> a) {
+    return type_b(Fixed<N,M,FAST>(b)-a);
+}
+
+template<size_t N, size_t M, size_t _N, size_t _M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> operator*(Fixed<N, M, FAST1> a, Fixed<_N, _M, FAST2> b) {
+    return a*Fixed<N,M, FAST1>(b);
+}
+template<size_t N, size_t M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> operator*(Fixed<N, M, FAST1> a, Fixed<N, M, FAST2> b) {
+    return a*Fixed<N,M, FAST1>(b);
+}
+template<size_t N, size_t M, bool FAST, typename type_b>
+Fixed<N, M, FAST> operator*(Fixed<N, M, FAST> a, type_b b) {
+    return a*Fixed<N,M, FAST>(b);
+}
+template<size_t N, size_t M, bool FAST, typename type_b>
+type_b operator*(type_b b, Fixed<N, M, FAST> a) {
+    return type_b(a*Fixed<N,M, FAST>(b));
+}
+
+template<size_t N, size_t M, size_t _N, size_t _M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> operator/(Fixed<N, M, FAST1> a, Fixed<_N, _M, FAST2> b) {
+    return a/Fixed<N,M, FAST1>(b);
+}
+template<size_t N, size_t M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> operator/(Fixed<N, M, FAST1> a, Fixed<N, M, FAST2> b) {
+    return a/Fixed<N,M, FAST1>(b);
+}
+template<size_t N, size_t M, bool FAST, typename type_b>
+Fixed<N, M, FAST> operator/(Fixed<N, M, FAST> a, type_b b) {
+    return a/Fixed<N,M, FAST>(b);
+}
+template<size_t N, size_t M, bool FAST, typename type_b>
+type_b operator/(type_b b, Fixed<N, M, FAST> a) {
+    return type_b(Fixed<N,M, FAST>(b)/a);
+}
+
+template<size_t N, size_t M, size_t _N, size_t _M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> &operator+=(Fixed<N, M, FAST1> &a, Fixed<_N, _M, FAST2> b) {
+    return a = a + Fixed<N,M, FAST1>(b);
+}
+template<size_t N, size_t M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> &operator+=(Fixed<N, M, FAST1> &a, Fixed<N, M, FAST2> b) {
+    return a = a + Fixed<N,M, FAST1>(b);
+}
+template<size_t N, size_t M, bool FAST, typename type_b>
+type_b &operator+=(type_b &b, Fixed<N, M, FAST> a) {
     return b = b + type_b(a);
 }
-template<size_t N, size_t M, typename type_b>
-Fixed<N, M> &operator+=(Fixed<N, M> &a, type_b b) {
-    return a = a + Fixed<N, M>(b);
+template<size_t N, size_t M, bool FAST, typename type_b>
+Fixed<N, M, FAST> &operator+=(Fixed<N, M, FAST> &a, type_b b) {
+    return a = a + Fixed<N, M, FAST>(b);
 }
 
-
-template<size_t N, size_t M>
-Fixed<N, M> &operator-=(Fixed<N, M> &a, Fixed<N, M> b) {
-    return a = a - b;
+template<size_t N, size_t M, size_t _N, size_t _M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> &operator-=(Fixed<N, M, FAST1> &a, Fixed<_N, _M, FAST2> b) {
+    return a = a - Fixed<N,M, FAST1>(b);
 }
-template<size_t N, size_t M, typename type_b>
-Fixed<N, M> &operator-=(Fixed<N, M> &a, type_b b) {
-    return a = a - Fixed<N, M>(b);
+template<size_t N, size_t M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> &operator-=(Fixed<N, M, FAST1> &a, Fixed<N, M, FAST2> b) {
+    return a = a - Fixed<N,M, FAST1>(b);
 }
-template<size_t N, size_t M, typename type_b>
-type_b &operator-=(type_b &b, Fixed<N, M> a) {
+template<size_t N, size_t M, bool FAST, typename type_b>
+Fixed<N, M, FAST> &operator-=(Fixed<N, M, FAST> &a, type_b b) {
+    return a = a - Fixed<N, M, FAST>(b);
+}
+template<size_t N, size_t M, bool FAST, typename type_b>
+type_b &operator-=(type_b &b, Fixed<N, M, FAST> a) {
     return b = b - type_b(a);
 }
 
-
-template<size_t N, size_t M, typename type_b>
-Fixed<N, M> operator*=(Fixed<N, M> &a, type_b b) {
-    return a = a * Fixed<N, M>(b);
+template<size_t N, size_t M, size_t _N, size_t _M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> &operator*=(Fixed<N, M, FAST1> &a, Fixed<_N, _M, FAST2> b) {
+    return a = a * Fixed<N,M, FAST1>(b);
 }
-template<size_t N, size_t M>
-Fixed<N, M> &operator*=(Fixed<N, M> &a, Fixed<N, M> b) {
-    return a = a * b;
+template<size_t N, size_t M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> &operator*=(Fixed<N, M, FAST1> &a, Fixed<N, M, FAST2> b) {
+    return a = a * Fixed<N,M, FAST1>(b);
 }
-template<size_t N, size_t M, typename type_b>
-type_b &operator*=(type_b &b, Fixed<N, M> a) {
+template<size_t N, size_t M, bool FAST, typename type_b>
+Fixed<N, M, FAST>& operator*=(Fixed<N, M, FAST> &a, type_b b) {
+    return a = a * Fixed<N, M, FAST>(b);
+}
+template<size_t N, size_t M, bool FAST, typename type_b>
+type_b &operator*=(type_b &b, Fixed<N, M, FAST> a) {
     return b = b * type_b(a);
 }
 
-
-template<size_t N, size_t M>
-Fixed<N, M> &operator/=(Fixed<N, M> &a, Fixed<N, M> b) {
-    return a = a / b;
+template<size_t N, size_t M, size_t _N, size_t _M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> &operator/=(Fixed<N, M, FAST1> &a, Fixed<_N, _M, FAST2> b) {
+    return a = a / Fixed<N,M, FAST1>(b);
 }
-template<size_t N, size_t M, typename type_b>
-Fixed<N, M> &operator/=(Fixed<N, M> &a, type_b b) {
-    return a = a / Fixed<N, M>(b);
+template<size_t N, size_t M, bool FAST1, bool FAST2>
+Fixed<N, M, FAST1> &operator/=(Fixed<N, M, FAST1> &a, Fixed<N, M, FAST2> b) {
+    return a = a / Fixed<N,M, FAST1>(b);
 }
-template<size_t N, size_t M, typename type_b>
-type_b &operator/=(type_b &b, Fixed<N, M> a) {
+template<size_t N, size_t M, bool FAST, typename type_b>
+Fixed<N, M, FAST> &operator/=(Fixed<N, M, FAST> &a, type_b b) {
+    return a = a / Fixed<N, M, FAST>(b);
+}
+template<size_t N, size_t M, bool FAST, typename type_b>
+type_b &operator/=(type_b &b, Fixed<N, M, FAST> a) {
     return b = b / type_b(a);
 }
 
 
-template<size_t N, size_t M>
-std::ostream &operator<<(std::ostream &out, Fixed<N, M> x) {
+template<size_t N, size_t M, bool FAST>
+std::ostream &operator<<(std::ostream &out, Fixed<N, M, FAST> x) {
     return out << x.v / (double) (1 << M);
 }
-template<size_t N, size_t M>
-Fixed<N, M> abs(Fixed<N, M> x) {
+template<size_t N, size_t M, bool FAST>
+Fixed<N, M> abs(Fixed<N, M, FAST> x) {
     if (x.v < 0) {
         x.v = -x.v;
     }
